@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <title>drop_hanoi</title>
+    <style>
+        .big_div {    
+            margin-left: 400px;
+            border: 5px solid #000000;
+            height: 500px;
+            width: 700px;
+            }
+
+            .upper_div {
+            position:relative;
+            height: 200px;
+            background-color: #00ffff;
+            border-bottom: 2px solid #008000;
+            } 
+
+            .lower_div {
+            height: 300px;
+            background-color: #00ff00;
+            } 
+
+            .sun_right{
+            position:relative;
+            left:380px;
+            right:0px;				
+            }
+
+            .help_icon {
+            position:relative;
+            right:65px;
+            bottom:35px;    
+            }
+
+            .butt {
+            position:relative;
+            margin-left:185px;
+            cursor:pointer;
+            }
+
+            .moves {
+            font-size:15px;
+            margin-left:10px;
+            background-color:white;
+            height:15px;
+            width:40px;
+            border:1px solid black;
+            position:relative;
+            left:-110px;
+            top:-25px;
+            }
+
+            .help_icon {
+            font-size: 15px;
+            background-color:yellow;
+            position:relative;
+            right:60px;
+            border:1px solid black;
+            width:16px;
+            }
+                
+            .canves {
+            display:flex;
+            flex-direction: row-reverse;
+            flex-flow: wrap;
+            margin-left: 170px;
+            }
+
+            .tower {
+            width: 120px;
+            height: 110px;
+            border-bottom: 5px solid #00ff00;
+            position: relative;
+            text-align: center;
+            padding: 0;
+            margin: 0 5px 0 0;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            cursor: pointer;
+            }
+
+            .disk {
+            height: 15px;
+            float: left;
+            border:1px solid black;
+            }
+
+            .disk.hold {
+            position: relative;
+            top: -50px;
+            left: 10px;
+            -webkit-transform: translateX(-50%);
+            transform: translateX(-50%);
+            }
+
+            .disk-1 {
+            width: 20px;
+            background-color: #ff8c00;
+            }
+
+            .disk-2 {
+            width: 40px;
+            background-color: #ff1493;
+            }
+
+            .disk-3 {
+            width: 60px;
+            background-color: #1e90ff;
+            }
+
+            .disk-4 {
+            width: 80px;
+            background-color: #808080;
+            }
+
+            .disk-5 {
+            width: 100px;
+            background-color: #dc143c;
+            }
+
+            .disk-6 {
+            width: 120px;
+            background-color: #800080;
+            }
+
+            .small_button {
+            margin-right:30px;
+            }
+
+            .medium_button {
+            margin-right:30px;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="big_div">
+        <div class="upper_div">
+            <span class="cloud_left">
+                <img src="cloud.png" alt="cloud.png" height="60" width="150" />
+                <span class="moves">0/0</span>
+            </span>
+            <span class="sun_right">
+                <img src="sun.png" alt="sun.png" height="80" width="100" />
+                <span class="help_icon">?</span>
+            </span>
+        </div>
+        <div class="lower_div">
+            <div class="canves" id="canves">
+                <div class="tower" id="tower-1"></div>
+                <div class="tower" id="tower-2"></div>
+                <div class="tower" id="tower-3"></div>
+            </div>
+            <div class="butt">
+                <button type="button" class="small_button" id="small_button">small Tower</button>
+                <button type="button" class="medium_button" id="medium_button">medium Tower</button>
+                <button type="button" class="big_button" id="big_button">big Tower</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Alert box for Help
+            $(".help_icon").click(function () {
+                alert("HELP:- \n 1. The goal of the puzzle is to move all the disks from the leftmost position to the rightmost position. \n 2. You can move only that disk which is on the top of a tower. \n 3. You can move this disk either to an empty position or on top of a disk which is bigger. \n 4. On click of Small tower button, 4 disks will be there in the game. \n On click of Medium tower button, 5 disks will be there in the game. \n On click of Big tower button, 6 disks will be there in the game.");
+            })
+
+            // Event of Small button
+            $(".small_button").on('click', function () {
+                initGame($tower.eq(0), 4);
+
+                setMaxMoves(4);
+            })
+
+            // Event on Medium button
+            $(".medium_button").on('click', function () {
+                initGame($tower.eq(0), 5);
+                setMaxMoves(5);
+            })
+
+            // Event of Big button
+            $(".big_button").on('click', function () {
+                initGame($tower.eq(0), 6);
+                setMaxMoves(6);
+            })
+
+            // Variables
+            let moves, maxMoves
+            $canves = $('.canves'),
+                $tower = $canves.find('.tower'),
+                $panel = $canves.find('.moves'),
+                $movesCount = $panel.find('.moves');
+
+            initGame($tower.eq(0), 4);
+
+            /*
+               Create Disks and Making them Draggabale 
+               with intended droppable logic
+            */
+            function initGame(tower, num) {
+                let gameover = false;
+                disksNum = num;
+                $tower.html('');
+                moves = 0;
+                holding = [];
+                let dis;
+                for (dis = 1; dis <= disksNum; dis += 1) {
+                    tower.prepend($('<div class="disk disk-' + dis + '" data-value="' + dis + '"></div>'));
+                }
+                var $blocks = $('.disk');
+                //since only last child of every stack can be movable
+                let $movableBlocks = $('.disk:last-child');
+                $movableBlocks.addClass("movable");
+
+                $blocks.draggable({
+                    revert: true
+                });
+
+                $tower.droppable({
+                    accept: ".movable",
+                    drop: function (event, ui) {
+                        if (!gameover) {
+                            if (goodToDrop($(this), ui.draggable)) {
+                                ui.draggable.draggable('option', 'revert', false);
+                                $(this).append(ui.draggable.detach());
+                                ui.draggable.css({
+                                    'top': 0,
+                                    'left': 0,
+                                });
+
+                                $movableBlocks = $('.disk:last-child');
+                                $('.disk').removeClass("movable");
+                                $movableBlocks.addClass("movable");
+                                $blocks.draggable({
+                                    revert: true
+                                });
+
+                                checkForWin();
+                            }
+                        } else {
+                            initGame($tower.eq(0), 4);;
+                        }
+                    }
+                });
+                /*
+                The Game Logic Here..
+                to ckeck if you dropping the block as per constraint or not
+                */
+                function goodToDrop($stack, $block) {
+                    let $last_block = $stack.children().last();
+                    if ($block.width() < $last_block.width() || $stack.children().length === 0) {
+                        moves = moves + 1;
+                        $('.moves').html(moves + "/65");
+                        gameLose();
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+
+            }
+
+            // to set Maximum Moves as per by total number of disks
+            function setMaxMoves(chance) {
+                ch = chance;
+                if (ch === 4) {
+                    maxMoves = 15;
+                } else if (ch === 5) {
+                    maxMoves = 31;
+                } else if (ch === 6) {
+                    maxMoves = 63;
+                }
+            }
+
+            // to check if all your moves exceed from maximum moves for game over event
+            function gameLose() {
+                if (moves > maxMoves) {
+                    alert("You Lose!");
+                    document.location.reload();
+                    gameover = true;
+                }
+            }
+
+            //  to check if you won or not
+            function checkForWin() {
+                if ($('#tower-3').children().length === disksNum) {
+                    alert("You Won!");
+                    document.location.reload();
+                    gameover = true;
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
